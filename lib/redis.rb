@@ -24,11 +24,16 @@ class Redis
     @current = redis
   end
 
+  def self.finalize(client)
+    proc { client.disconnect }
+  end
+
   include MonitorMixin
 
   def initialize(options = {})
     @options = options.dup
     @original_client = @client = Client.new(options)
+    ObjectSpace.define_finalizer(self, self.class.finalize(@original_client))
 
     super() # Monitor#initialize
   end
